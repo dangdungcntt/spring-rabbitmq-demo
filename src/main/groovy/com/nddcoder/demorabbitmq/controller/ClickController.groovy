@@ -1,12 +1,12 @@
 package com.nddcoder.demorabbitmq.controller
 
 import com.fasterxml.jackson.databind.ObjectMapper
-import com.nddcoder.demorabbitmq.conf.AppConfig
 import com.nddcoder.demorabbitmq.model.Click
 import com.nddcoder.demorabbitmq.producer.QueueSender
 import groovy.transform.CompileStatic
 import org.bson.types.ObjectId
 import org.springframework.beans.factory.annotation.Autowired
+import org.springframework.beans.factory.annotation.Value
 import org.springframework.web.bind.annotation.GetMapping
 import org.springframework.web.bind.annotation.RequestMapping
 import org.springframework.web.bind.annotation.RequestParam
@@ -24,6 +24,8 @@ class ClickController {
     QueueSender queueSender
     @Autowired
     ObjectMapper objectMapper
+    @Value('${rabbitmq.exchange.clicks}')
+    String clicksExchangeName
 
     @GetMapping
     void handle(@RequestParam(name = 'target') String target,
@@ -42,7 +44,7 @@ class ClickController {
                 .replaceAll('\\{click_id}', click._id.toString())
                 .replaceAll('\\{ip}', click.ip)
 
-        queueSender.send(AppConfig.EXCHANGE_NAME, objectMapper.writeValueAsString(click))
+        queueSender.send(clicksExchangeName, objectMapper.writeValueAsString(click))
 
         response.sendRedirect(click.target)
     }
